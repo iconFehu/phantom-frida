@@ -47,7 +47,7 @@ from patches import (
 
 # --- Constants ---
 
-NDK_VERSION = "r29"
+NDK_VERSION = "r25c"
 NDK_URL = f"https://dl.google.com/android/repository/android-ndk-{NDK_VERSION}-linux.zip"
 ALL_ARCHS = ["android-arm64", "android-arm", "android-x86_64", "android-x86"]
 
@@ -869,7 +869,7 @@ Detection vectors covered:
     parser.add_argument("--output-dir", "-o", default=None,
                         help="Output directory (default: ./output)")
     parser.add_argument("--ndk-path", default=None,
-                        help="Path to existing Android NDK r29 (skip download)")
+                        help="Path to existing Android NDK r25c (skip download)")
     parser.add_argument("--skip-clone", action="store_true",
                         help="Use existing source in work-dir")
     parser.add_argument("--skip-build", action="store_true",

@@ -4,19 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       frida_version:
-        description: 'Frida version (e.g. 17.7.2)'
+        description: 'Frida version (e.g. 17.15.5)'
         required: true
-        default: '17.7.2'
+        default: '17.15.5'
       custom_name:
         description: 'Custom name (replaces "frida" everywhere)'
         required: true
-        default: 'ajeossida'
+        default: 'arthelper'
       arch:
         description: 'Target architecture(s)'
         required: true
-        default: 'android-arm64'
+        default: 'android-x86_64'
         type: choice
         options:
+          - android-x86_64
+          - android-x86
           - android-arm64
           - android-arm
           - android-arm64,android-arm
@@ -34,7 +36,7 @@ on:
         description: 'Stability fixes (perfetto skip, cloak detach)'
         required: false
         type: boolean
-        default: false
+        default: true
 
 jobs:
   build:
@@ -58,21 +60,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential curl git python3 unzip
 
-      # Cache NDK (~1.5 GB) — saves ~3 min on subsequent runs
-      - name: Cache NDK
+      # Cache NDK (~1.5 GB) — r25c matches proven successful CI builds
+      - name: Cache NDK r25c
         uses: actions/cache@v4
         id: ndk-cache
         with:
-          path: build/android-ndk-r29
-          key: ndk-r29-linux
+          path: build/android-ndk-r25c
+          key: ndk-r25c-linux
 
-      - name: Download NDK
+      - name: Download NDK r25c
         if: steps.ndk-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p build
-          curl -L -o build/android-ndk-r29-linux.zip \
-            https://dl.google.com/android/repository/android-ndk-r29-linux.zip
-          cd build && unzip -q android-ndk-r29-linux.zip && rm android-ndk-r29-linux.zip
+          curl -L -o build/android-ndk-r25c-linux.zip \
+            https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
+          cd build && unzip -q android-ndk-r25c-linux.zip && rm android-ndk-r25c-linux.zip
 
       # Cache Frida source tree — saves ~5 min clone time
       - name: Cache Frida source
@@ -105,7 +107,7 @@ jobs:
           CMD="python3 build.py --version ${{ inputs.frida_version }}"
           CMD="$CMD --name ${{ inputs.custom_name }}"
           CMD="$CMD --arch ${{ inputs.arch }}"
-          CMD="$CMD --skip-clone --ndk-path build/android-ndk-r29"
+          CMD="$CMD --skip-clone --ndk-path build/android-ndk-r25c"
           CMD="$CMD --verify"
 
           if [ -n "${{ inputs.port }}" ]; then
