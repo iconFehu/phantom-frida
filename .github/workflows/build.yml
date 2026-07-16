@@ -12,7 +12,7 @@ on:
         required: true
         default: 'arthelper'
       arch:
-        description: 'Target architecture(s)'
+        description: 'Target architecture (prefer one per run)'
         required: true
         default: 'android-x86_64'
         type: choice
@@ -60,21 +60,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential curl git python3 unzip
 
-      # Cache NDK (~1.5 GB) — r25c matches proven successful CI builds
-      - name: Cache NDK r25c
+      # Frida 17.15+ requires NDK r29
+      - name: Cache NDK r29
         uses: actions/cache@v4
         id: ndk-cache
         with:
-          path: build/android-ndk-r25c
-          key: ndk-r25c-linux
+          path: build/android-ndk-r29
+          key: ndk-r29-linux
 
-      - name: Download NDK r25c
+      - name: Download NDK r29
         if: steps.ndk-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p build
-          curl -L -o build/android-ndk-r25c-linux.zip \
-            https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
-          cd build && unzip -q android-ndk-r25c-linux.zip && rm android-ndk-r25c-linux.zip
+          curl -L -o build/android-ndk-r29-linux.zip \
+            https://dl.google.com/android/repository/android-ndk-r29-linux.zip
+          cd build && unzip -q android-ndk-r29-linux.zip && rm android-ndk-r29-linux.zip
 
       # Cache Frida source tree — saves ~5 min clone time
       - name: Cache Frida source
@@ -107,7 +107,7 @@ jobs:
           CMD="python3 build.py --version ${{ inputs.frida_version }}"
           CMD="$CMD --name ${{ inputs.custom_name }}"
           CMD="$CMD --arch ${{ inputs.arch }}"
-          CMD="$CMD --skip-clone --ndk-path build/android-ndk-r25c"
+          CMD="$CMD --skip-clone --ndk-path build/android-ndk-r29"
           CMD="$CMD --verify"
 
           if [ -n "${{ inputs.port }}" ]; then
