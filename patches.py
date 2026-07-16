@@ -103,6 +103,10 @@ def get_rollback_patches(name: str) -> list[tuple[str, str]]:
         (f"{name}-server.version", "frida-server.version"),
         (f"{name}-server.plist", "frida-server.plist"),
         (f"{name}-server.xcent", "frida-server.xcent"),
+        # compat/meson.build passes glib flavor enum to compat/build.py
+        # (choices=["upstream", "frida"]). Renaming breaks argparse (exit 2).
+        (f"have_shared_glib ? 'upstream' : '{name}'",
+         "have_shared_glib ? 'upstream' : 'frida'"),
     ]
 
 
@@ -139,6 +143,9 @@ def get_targeted_patches(name: str, cap_name: str, target: str) -> list[tuple[st
             # Cross-arch naming
             (f'"frida-server-"', f'"{name}-server-"'),
             (f'"frida-gadget-"', f'"{name}-gadget-"'),
+            # Accept renamed glib flavor if meson enum was patched before rollback
+            ('choices=["upstream", "frida"]',
+             f'choices=["upstream", "frida", "{name}"]'),
         ]
 
     elif target == "core_meson":
