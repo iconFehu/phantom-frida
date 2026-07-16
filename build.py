@@ -589,6 +589,20 @@ def apply_post_build_patches(frida_dir: Path, custom_name: str):
     log(f"  frida_agent_main -> {custom_name}_agent_main ({count})", "OK")
 
 
+def revert_agent_main_in_source(frida_dir: Path, custom_name: str):
+    """Undo source-side agent_main rename before building another architecture.
+
+    Post-build renames agent-glue.c permanently. Vala regenerates
+    frida_agent_main on a fresh build/, so the call/definition mismatch.
+    """
+    count = replace_in_tree(
+        frida_dir, f"{custom_name}_agent_main", "frida_agent_main",
+        include_build=False,
+    )
+    if count:
+        log(f"  Reverted {custom_name}_agent_main -> frida_agent_main in source ({count})", "INFO")
+
+
 # ============================================================================
 # PHASE 4: Binary-level patches (after second compilation)
 # ============================================================================
@@ -948,10 +962,15 @@ Detection vectors covered:
         return
 
     # Step 5: Build loop
-    for arch in archs:
+    for i, arch in enumerate(archs):
         log("=" * 60, "HEADER")
         log(f"Building for {arch}", "STEP")
         log("=" * 60, "HEADER")
+
+        # After the first arch, post-build left custom_name_agent_main in source.
+        # Revert so this arch's first build matches Vala-generated frida_agent_main.
+        if i > 0:
+            revert_agent_main_in_source(frida_dir, custom_name)
 
         # Configure
         configure_arch(frida_dir, arch, ndk_path)
