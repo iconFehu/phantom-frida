@@ -228,20 +228,13 @@ LIBC_HOOK_PATCHES = {
     ],
 
     # gumexceptor-posix.c: disable signal/sigaction replacement
-    # Verified exact lines in 17.7.2:
-    #   gum_interceptor_replace (interceptor, gum_original_signal,
-    #       gum_exceptor_backend_replacement_signal, self, NULL);
-    #   gum_interceptor_replace (interceptor, gum_original_sigaction,
-    #       gum_exceptor_backend_replacement_sigaction, self, NULL);
+    # Wrap in if (0) so both 17.7 (self, NULL) and 17.15 (NULL, &options)
+    # call shapes stay syntactically valid.
     "exceptor": [
         ("gum_interceptor_replace (interceptor, gum_original_signal,",
-         "// gum_interceptor_replace (interceptor, gum_original_signal,"),
-        ("gum_exceptor_backend_replacement_signal, self, NULL);",
-         "// gum_exceptor_backend_replacement_signal, self, NULL);"),
+         "if (0) gum_interceptor_replace (interceptor, gum_original_signal,"),
         ("gum_interceptor_replace (interceptor, gum_original_sigaction,",
-         "// gum_interceptor_replace (interceptor, gum_original_sigaction,"),
-        ("gum_exceptor_backend_replacement_sigaction, self, NULL);",
-         "// gum_exceptor_backend_replacement_sigaction, self, NULL);"),
+         "if (0) gum_interceptor_replace (interceptor, gum_original_sigaction,"),
     ],
 }
 
