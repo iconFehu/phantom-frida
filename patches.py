@@ -418,6 +418,29 @@ def get_stability_patches_17(frida_dir: Path) -> list[dict]:
     Optional stability fixes for Frida 17.x.
     Apply only if needed (device-specific issues).
     """
+    gum = frida_dir / "subprojects/frida-gum/gum/backend-linux/gumprocess-linux.c"
+    text = gum.read_text(encoding="utf-8", errors="ignore") if gum.exists() else ""
+
+    # 17.15+ refactored thread enumeration — no skip: label anymore
+    if "gum_fill_thread_details (entry, flags)" in text:
+        return [
+            {
+                "description": "Skip perfetto_hprof_ thread during enumeration (prevents SEGV on some devices)",
+                "file": "subprojects/frida-gum/gum/backend-linux/gumprocess-linux.c",
+                "old": (
+                    "    if (gum_fill_thread_details (entry, flags))\n"
+                    "      carry_on = func (entry, user_data);"
+                ),
+                "new": (
+                    "    if (gum_fill_thread_details (entry, flags)\n"
+                    "        && (entry->name == NULL\n"
+                    "          || strcmp (entry->name, \"perfetto_hprof_\") != 0))\n"
+                    "      carry_on = func (entry, user_data);"
+                ),
+            },
+        ]
+
+    # 17.7.x still has the skip: label after the callback
     return [
         {
             "description": "Skip perfetto_hprof_ thread during enumeration (prevents SEGV on some devices)",
