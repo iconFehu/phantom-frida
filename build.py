@@ -683,6 +683,11 @@ def apply_binary_patches(binary_path: Path, custom_name: str, extended: bool = F
 
 def configure_arch(frida_dir: Path, arch: str, ndk_path: Path):
     log(f"Configuring for {arch}...", "STEP")
+    # Frida's configure refuses host changes: "Already configured. Wipe ./build"
+    build_dir = frida_dir / "build"
+    if build_dir.exists():
+        log("Wiping previous build/ for host reconfigure...", "INFO")
+        shutil.rmtree(build_dir)
     run(
         f"./configure --host={arch}",
         cwd=str(frida_dir),
